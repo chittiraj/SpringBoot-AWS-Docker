@@ -29,5 +29,11 @@ public class userController {
         return userService.getAllUser();
     }
 
+    @GetMapping("/test")
+    public String test() {
+        return "CI/CD is working ";
+    }
+
+
 
 }
