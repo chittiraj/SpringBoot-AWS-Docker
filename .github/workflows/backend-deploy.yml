@@ -14,7 +14,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2. Set up Java 21 (REQUIRED for Spring Boot 4.x)
+      # 2. Set up Java 21 (required for Spring Boot 4.x)
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
@@ -46,14 +46,16 @@ jobs:
           tags: chittiraja/springboot-aws-docker:latest
           platforms: linux/amd64
 
-      # 7. Deploy to AWS EC2
-      - name: Deploy to EC2 via SSH
-        uses: appleboy/ssh-action@v1
+      # 7. Setup SSH agent with EC2 private key
+      - name: Setup SSH Agent
+        uses: webfactory/ssh-agent@v0.9.0
         with:
-          host: 52.207.11.151
-          username: ubuntu
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
+          ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
+
+      # 8. Deploy to AWS EC2
+      - name: Deploy to EC2
+        run: |
+          ssh -o StrictHostKeyChecking=no ubuntu@52.207.11.151 << 'EOF'
             docker pull chittiraja/springboot-aws-docker:latest
             docker stop springboot-backend || true
             docker rm springboot-backend || true
@@ -61,3 +63,4 @@ jobs:
               --name springboot-backend \
               -p 8080:8080 \
               chittiraja/springboot-aws-docker:latest
+          EOF
