@@ -3,7 +3,7 @@ name: Spring Boot CI/CD to AWS EC2 (Java 21)
 on:
   push:
     branches:
-      - master   # keep master if that’s your default branch
+      - master
 
 jobs:
   build-and-deploy:
