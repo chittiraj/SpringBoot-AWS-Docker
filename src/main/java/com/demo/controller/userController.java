@@ -33,6 +33,10 @@ public class userController {
     public String test() {
         return "CI/CD is working ";
     }
+    @GetMapping("/testing-endpoint")
+    public String testEndPoint(){
+        return "Testing-endpoint";
+    }
 
 
 
