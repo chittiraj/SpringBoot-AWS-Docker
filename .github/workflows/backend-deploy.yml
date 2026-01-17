@@ -3,40 +3,40 @@ name: Spring Boot CI/CD to AWS EC2 (Java 21)
 on:
   push:
     branches:
-      - master
+      - master   # keep master if that’s your default branch
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout source code
+      # 1️⃣ Checkout source code
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2. Set up Java 21 (required for Spring Boot 4.x)
+      # 2️⃣ Set up Java 21
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '21'
 
-      # 3. Build Spring Boot JAR
+      # 3️⃣ Build Spring Boot JAR
       - name: Build JAR with Maven
         run: mvn clean package -DskipTests
 
-      # 4. Set up Docker Buildx
+      # 4️⃣ Set up Docker Buildx
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # 5. Login to Docker Hub
+      # 5️⃣ Login to Docker Hub
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      # 6. Build & Push Docker image (linux/amd64)
+      # 6️⃣ Build & Push Docker image
       - name: Build and Push Docker Image
         uses: docker/build-push-action@v5
         with:
@@ -46,21 +46,27 @@ jobs:
           tags: chittiraja/springboot-aws-docker:latest
           platforms: linux/amd64
 
-      # 7. Setup SSH agent with EC2 private key
+      # 7️⃣ Setup SSH agent
       - name: Setup SSH Agent
         uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
 
-      # 8. Deploy to AWS EC2
-      - name: Deploy to EC2
+      # 8️⃣ Deploy to EC2 using Docker Compose (FINAL FIX)
+      - name: Deploy to EC2 with Docker Compose
         run: |
           ssh -o StrictHostKeyChecking=no ubuntu@52.207.11.151 << 'EOF'
-            docker pull chittiraja/springboot-aws-docker:latest
+            cd /home/ubuntu
+
+            # 🔥 Force remove old standalone backend container (ONE-TIME FIX)
             docker stop springboot-backend || true
             docker rm springboot-backend || true
-            docker run -d \
-              --name springboot-backend \
-              -p 8080:8080 \
-              chittiraja/springboot-aws-docker:latest
+
+            # Pull latest images
+            docker pull chittiraja/springboot-aws-docker:latest
+            docker pull chittiraja/frontend-uat:latest
+
+            # Restart full stack via compose
+            docker compose down
+            docker compose up -d
           EOF
