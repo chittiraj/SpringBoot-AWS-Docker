@@ -55,7 +55,7 @@ jobs:
       # 8️⃣ Deploy to EC2 using Docker Compose (FINAL FIX)
       - name: Deploy to EC2 with Docker Compose
         run: |
-          ssh -o StrictHostKeyChecking=no ubuntu@52.207.11.151 << 'EOF'
+          ssh -o StrictHostKeyChecking=no ubuntu@18.208.115.123 << 'EOF'
             cd /home/ubuntu
 
             # 🔥 Force remove old standalone backend container (ONE-TIME FIX)
